@@ -80,7 +80,7 @@ public class RequestChunkDataPacketListener implements PacketHandler {
             return;
         }
 
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         if (server == null) {
             sendEmptyResponse(player, id);
             friendlyByteBuf.readerIndex(friendlyByteBuf.writerIndex());
