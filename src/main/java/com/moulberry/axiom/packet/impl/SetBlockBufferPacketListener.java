@@ -91,7 +91,7 @@ public class SetBlockBufferPacketListener implements PacketHandler {
     }
 
     private void applyBlockBuffer(ServerPlayer player, MinecraftServer server, BlockBuffer buffer, ResourceKey<Level> worldKey, int clientAvailableDispatchSends) {
-        server.execute(() -> {
+        player.getBukkitEntity().getScheduler().execute(plugin, () -> {
             try {
                 if (this.plugin.logLargeBlockBufferChanges()) {
                     this.plugin.getLogger().info("Player " + player.getUUID() + " modified " + buffer.getSectionCount() + " chunk sections (blocks)");
@@ -119,11 +119,11 @@ public class SetBlockBufferPacketListener implements PacketHandler {
             } catch (Throwable t) {
                 player.getBukkitEntity().kick(net.kyori.adventure.text.Component.text("An error occured while processing block change: " + t.getMessage()));
             }
-        });
+        }, null, 1);
     }
 
     private void applyBiomeBuffer(ServerPlayer player, MinecraftServer server, BiomeBuffer biomeBuffer, ResourceKey<Level> worldKey, int clientAvailableDispatchSends) {
-        server.execute(() -> {
+        player.getBukkitEntity().getScheduler().execute(plugin, () -> {
             try {
                 if (this.plugin.logLargeBlockBufferChanges()) {
                     this.plugin.getLogger().info("Player " + player.getUUID() + " modified " + biomeBuffer.getSectionCount() + " chunk sections (biomes)");
@@ -187,7 +187,7 @@ public class SetBlockBufferPacketListener implements PacketHandler {
             } catch (Throwable t) {
                 player.getBukkitEntity().kick(net.kyori.adventure.text.Component.text("An error occured while processing biome change: " + t.getMessage()));
             }
-        });
+        }, null, 1);
     }
 
 }
