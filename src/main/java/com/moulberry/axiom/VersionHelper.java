@@ -1,12 +1,18 @@
 package com.moulberry.axiom;
 
+import com.mojang.serialization.Codec;
 import io.netty.buffer.Unpooled;
+import net.minecraft.SharedConstants;
+import net.minecraft.core.IdMap;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
 import net.minecraft.network.protocol.common.custom.DiscardedPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.PalettedContainer;
+import net.minecraft.world.level.chunk.Strategy;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
@@ -102,6 +108,18 @@ public class VersionHelper {
         } else {
             return list;
         }
+    }
+
+    public static PalettedContainer<BlockState> createPalettedContainer(IdMap<BlockState> map, BlockState defaultValue) {
+        return new PalettedContainer<>(defaultValue, Strategy.createForBlockStates(map));
+    }
+
+    public static Codec<PalettedContainer<BlockState>> createPalettedContainerCodec(Codec<BlockState> codec, IdMap<BlockState> map, BlockState defaultValue) {
+        return PalettedContainer.codecRW(codec, Strategy.createForBlockStates(map), defaultValue);
+    }
+
+    public static String getVersion() {
+        return SharedConstants.getCurrentVersion().name();
     }
 
 }
