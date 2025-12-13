@@ -214,7 +214,7 @@ public class AxiomPaper extends JavaPlugin implements Listener {
                 }
             });
             RegistryFriendlyByteBuf friendlyByteBuf = new RegistryFriendlyByteBuf(Unpooled.buffer(), MinecraftServer.getServer().registryAccess());
-            protocol.codec().encode(friendlyByteBuf, new ServerboundCustomPayloadPacket(VersionHelper.createCustomPayload(VersionHelper.createResourceLocation("dummy"), new byte[0])));
+            protocol.codec().encode(friendlyByteBuf, new ServerboundCustomPayloadPacket(VersionHelper.createCustomPayload(VersionHelper.createIdentifier("dummy"), new byte[0])));
             int payloadId = friendlyByteBuf.readVarInt();
 
             ChannelInitializeListenerHolder.addListener(Key.key("axiom:handle_big_payload"), new ChannelInitializeListener() {
@@ -749,7 +749,7 @@ public class AxiomPaper extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onGameRuleChanged(WorldGameRuleChangeEvent event) {
-        if (event.getGameRule() == GameRule.DO_WEATHER_CYCLE) {
+        if (event.getGameRule() == GameRules.ADVANCE_WEATHER) {
             ServerWorldPropertiesRegistry.PAUSE_WEATHER.setValue(event.getWorld(), !Boolean.parseBoolean(event.getValue()));
         }
     }
