@@ -13,7 +13,7 @@ luckperms = "5.4"
 # Plugins
 paperweight-userdev = "2.0.0-beta.17"
 run-paper = "2.3.1"
-shadow = "8.1.7"
+shadow = "9.3.0"
 
 [libraries]
 bom-newest = { group = "com.intellectualsites.bom", name = "bom-newest", version.ref = "bom-newest" }
@@ -30,4 +30,4 @@ luckperms = { group = "net.luckperms", name = "api", version.ref = "luckperms" }
 [plugins]
 paperweight-userdev = { id = "io.papermc.paperweight.userdev", version.ref = "paperweight-userdev" }
 run-paper = { id = "xyz.jpenilla.run-paper", version.ref = "run-paper" }
-shadow = { id = "io.github.goooler.shadow", version.ref = "shadow" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
