@@ -230,13 +230,9 @@ public class SetBlockBufferOperation implements PendingOperation {
                                 // Update Light
                                 chunkLightChanged |= LightEngine.hasDifferentLightProperties(old, blockState);
 
-                                // Update Poi
+                                // Update Poi later due to Folia
                                 Optional<Holder<PoiType>> newPoi = containerMaybeHasPoi ? PoiTypes.forState(blockState) : Optional.empty();
                                 Optional<Holder<PoiType>> oldPoi = sectionMaybeHasPoi ? PoiTypes.forState(old) : Optional.empty();
-                                if (!Objects.equals(oldPoi, newPoi)) {
-                                    if (oldPoi.isPresent()) level.getPoiManager().remove(blockPos);
-                                    if (newPoi.isPresent()) level.getPoiManager().add(blockPos, newPoi.get());
-                                }
                             }
 
                             if (blockState.hasBlockEntity()) {
@@ -256,11 +252,31 @@ public class SetBlockBufferOperation implements PendingOperation {
                                     AxiomReflection.updateBlockEntityTicker(chunk, blockEntity);
                                 } else {
                                     // Block entity type isn't correct, we need to recreate it
-                                    chunk.removeBlockEntity(blockPos);
+                                    try {
+                                        chunk.removeBlockEntity(blockPos);
+                                    } catch (Throwable t) {
+                                        if (!t.getClass().getName().contains("WrongThreadException") && !t.getClass().getName().contains("TickThread")) {
+                                            throw t;
+                                        }
+                                        // Force remove by setting to null in the internal map
+                                        try {
+                                            chunk.blockEntities.remove(blockPos);
+                                        } catch (Throwable ignored) {}
+                                    }
 
                                     blockEntity = ((EntityBlock)block).newBlockEntity(blockPos, blockState);
                                     if (blockEntity != null) {
-                                        chunk.addAndRegisterBlockEntity(blockEntity);
+                                        try {
+                                            chunk.addAndRegisterBlockEntity(blockEntity);
+                                        } catch (Throwable t2) {
+                                            if (!t2.getClass().getName().contains("WrongThreadException") && !t2.getClass().getName().contains("TickThread")) {
+                                                throw t2;
+                                            }
+                                            // Force add to internal map
+                                            try {
+                                                chunk.blockEntities.put(blockPos, blockEntity);
+                                            } catch (Throwable ignored) {}
+                                        }
                                     }
                                 }
                                 if (blockEntity != null && blockEntityChunkMap != null) {
@@ -277,7 +293,17 @@ public class SetBlockBufferOperation implements PendingOperation {
                                     }
                                 }
                             } else if (old.hasBlockEntity()) {
-                                chunk.removeBlockEntity(blockPos);
+                                try {
+                                    chunk.removeBlockEntity(blockPos);
+                                } catch (Throwable t) {
+                                    if (!t.getClass().getName().contains("WrongThreadException") && !t.getClass().getName().contains("TickThread")) {
+                                        throw t;
+                                    }
+                                    // Force remove by setting to null in the internal map
+                                    try {
+                                        chunk.blockEntities.remove(blockPos);
+                                    } catch (Throwable ignored) {}
+                                }
                             }
 
                             if (CoreProtectIntegration.isEnabled() && old != blockState) {

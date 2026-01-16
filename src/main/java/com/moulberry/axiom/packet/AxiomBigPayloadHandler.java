@@ -22,6 +22,7 @@ import net.minecraft.network.Utf8String;
 import net.minecraft.network.VarInt;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
@@ -76,10 +77,9 @@ public class AxiomBigPayloadHandler extends MessageToMessageDecoder<ByteBuf> {
                     } else {
                         byte[] bytes = ByteBufUtil.getBytes(buf);
 
-                        player.level().getServer().execute(() -> {
-                            RegistryFriendlyByteBuf friendlyByteBuf = new RegistryFriendlyByteBuf(Unpooled.wrappedBuffer(bytes), player.registryAccess());
-                            callReceive(handler, player, friendlyByteBuf, identifier);
-                        });
+                        Bukkit.getGlobalRegionScheduler().execute(AxiomPaper.PLUGIN, () ->
+                              callReceive(handler, player, new RegistryFriendlyByteBuf(Unpooled.wrappedBuffer(bytes), player.registryAccess()),
+                                    identifier));
                     }
                     success = true;
                     in.readerIndex(in.writerIndex());
@@ -111,7 +111,12 @@ public class AxiomBigPayloadHandler extends MessageToMessageDecoder<ByteBuf> {
         try {
             handler.onReceive(player.getBukkitEntity(), friendlyByteBuf);
         } catch (Throwable t) {
-            player.connection.disconnectAsync(net.minecraft.network.chat.Component.literal("Error while processing Axiom packet " + identifier + ": " + t.getMessage()), DisconnectionReason.UNKNOWN);
+            String errorMsg = t.getMessage();
+            if (errorMsg == null || errorMsg.isEmpty()) {
+                errorMsg = t.getClass().getSimpleName();
+            }
+            t.printStackTrace();
+            player.connection.disconnectAsync(net.minecraft.network.chat.Component.literal("Error while processing Axiom packet " + identifier + ": " + errorMsg), DisconnectionReason.UNKNOWN);
         }
     }
 

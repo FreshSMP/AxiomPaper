@@ -44,6 +44,7 @@ import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.lighting.LightEngine;
 import net.minecraft.world.level.storage.TagValueInput;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
@@ -91,7 +92,7 @@ public class SetBlockBufferPacketListener implements PacketHandler {
     }
 
     private void applyBlockBuffer(ServerPlayer player, MinecraftServer server, BlockBuffer buffer, ResourceKey<Level> worldKey, int clientAvailableDispatchSends) {
-        player.getBukkitEntity().getScheduler().execute(plugin, () -> {
+        Runnable task = () -> {
             try {
                 if (this.plugin.logLargeBlockBufferChanges()) {
                     this.plugin.getLogger().info("Player " + player.getUUID() + " modified " + buffer.getSectionCount() + " chunk sections (blocks)");
@@ -117,13 +118,20 @@ public class SetBlockBufferPacketListener implements PacketHandler {
                 boolean allowNbt = this.plugin.hasPermission(player.getBukkitEntity(), AxiomPermission.BUILD_NBT);
                 this.plugin.addPendingOperation(world, new SetBlockBufferOperation(player, buffer, allowNbt));
             } catch (Throwable t) {
-                player.getBukkitEntity().kick(net.kyori.adventure.text.Component.text("An error occured while processing block change: " + t.getMessage()));
+                String errorMsg = t.getMessage();
+                if (errorMsg == null || errorMsg.isEmpty()) {
+                    errorMsg = t.getClass().getSimpleName();
+                }
+                plugin.getLogger().severe("Error processing set_buffer: " + errorMsg);
+                t.printStackTrace();
+                player.getBukkitEntity().kick(net.kyori.adventure.text.Component.text("An error occurred while processing block change: " + errorMsg));
             }
-        }, null, 1);
+        };
+        Bukkit.getGlobalRegionScheduler().execute(this.plugin, task);
     }
 
     private void applyBiomeBuffer(ServerPlayer player, MinecraftServer server, BiomeBuffer biomeBuffer, ResourceKey<Level> worldKey, int clientAvailableDispatchSends) {
-        player.getBukkitEntity().getScheduler().execute(plugin, () -> {
+        Runnable task = () -> {
             try {
                 if (this.plugin.logLargeBlockBufferChanges()) {
                     this.plugin.getLogger().info("Player " + player.getUUID() + " modified " + biomeBuffer.getSectionCount() + " chunk sections (biomes)");
@@ -185,9 +193,16 @@ public class SetBlockBufferPacketListener implements PacketHandler {
                 }
                 map.forEach((serverPlayer, list) -> serverPlayer.connection.send(ClientboundChunksBiomesPacket.forChunks(list)));
             } catch (Throwable t) {
-                player.getBukkitEntity().kick(net.kyori.adventure.text.Component.text("An error occured while processing biome change: " + t.getMessage()));
+                String errorMsg = t.getMessage();
+                if (errorMsg == null || errorMsg.isEmpty()) {
+                    errorMsg = t.getClass().getSimpleName();
+                }
+                plugin.getLogger().severe("Error processing biome_buffer: " + errorMsg);
+                t.printStackTrace();
+                player.getBukkitEntity().kick(net.kyori.adventure.text.Component.text("An error occurred while processing biome change: " + errorMsg));
             }
-        }, null, 1);
+        };
+        Bukkit.getGlobalRegionScheduler().execute(this.plugin, task);
     }
 
 }
